@@ -1,185 +1,33 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:ig/const.dart';
-import 'package:ig/features/presentation/widgets/form_container_widget.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ig/features/domain/entities/app_entity.dart';
+import 'package:ig/features/presentation/cubit/comment/cubit/comment_cubit.dart';
+import 'package:ig/features/presentation/cubit/post/single_post/cubit/get_post_single_cubit.dart';
+import 'package:ig/features/presentation/cubit/user/get_single_user/cubit/get_single_user_cubit.dart';
+import 'package:ig/features/presentation/widgets/comment_main_widget.dart';
+import 'package:ig/injection_container.dart' as di;
 
-class CommentPage extends StatefulWidget {
-  const CommentPage({super.key});
+class ComentPage extends StatelessWidget {
+  final AppEntity appEntity;
+  const ComentPage({super.key, required this.appEntity});
 
-  @override
-  State<CommentPage> createState() => _CommentPageState();
-}
-
-class _CommentPageState extends State<CommentPage> {
-  bool _isUserReplaying=false;
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
-        backgroundColor: backgroundColor,
-        leading: GestureDetector(
-            onTap: () {
-              Navigator.pop(context);
-            },
-            child: const Icon(
-              Icons.arrow_back,
-              color: primaryColor,
-            )),
-        title: const Text(
-          "Comment",
-          style: TextStyle(color: primaryColor),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<CommentCubit>(
+          create: (context) => di.sl<CommentCubit>(),
         ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: const BoxDecoration(
-                      shape: BoxShape.circle, color: secondaryColor),
-                ),
-                sizehOR(10),
-                const Text(
-                  "User Name",
-                  style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: primaryColor),
-                )
-              ],
-            ),
-            const Text(
-              "This is very beautiful",
-              style: TextStyle(color: primaryColor),
-            ),
-            sizeVer(10),
-            const Divider(
-              color: secondaryColor,
-            ),
-            sizeVer(10),
-            Expanded (
-              child: Container(
-                child: Row(
-                  children: [
-                    Container(
-                      height: 40,
-                      width: 40,
-                      decoration: const BoxDecoration(
-                          color: secondaryColor, shape: BoxShape.circle),
-                    ),
-                    sizehOR(10),
-                     Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "User Name",
-                                  style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      color: primaryColor),
-                                ),
-                                Icon(
-                                  Icons.favorite_outline,
-                                  color: primaryColor,
-                                  size: 20,
-                                )
-                              ],
-                            ),
-                            sizeVer(4),
-                            Text("THis is commetn",style: TextStyle(color: primaryColor),),
-                            sizeVer(4),
-                            Row(
-                              children: [
-                                Text("13/09/2024",
-                                style: TextStyle(color: darkGreyColor,fontSize: 12),),
-                                sizehOR(15),
-                                GestureDetector(
-                                  onTap: (){
-                                    setState(() {
-                                      _isUserReplaying=!_isUserReplaying;
-                                    });
-                                  },
-                                  child: Text("Replay",
-                                  style: TextStyle(color: darkGreyColor,fontSize: 12),),
-                                ),sizehOR(15),
-                                Text("View Replay",
-                                style: TextStyle(color: darkGreyColor,fontSize: 12),)
-                              ],
-                            ),
-                            _isUserReplaying==true
-                            ?sizeVer(10)
-                            :sizeVer(0),
-                            _isUserReplaying==true
-                            ?Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                FormContainerWidget(hintText: "Post your replay"),
-                                sizeVer(10),
-                                Text(
-                                  "Post"
-                                  ,style: TextStyle(
-                                    color: blueColor
-                                  ),
-                                )
-                              ],
-                            )
-                            :Container()
-                          ],
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              ),
-            ),
-           _commentSection()
-          ],
+        BlocProvider<GetSingleUserCubit>(
+          create: (context) => di.sl<GetSingleUserCubit>(),
         ),
-      ),
-    );
-  }
-
-  _commentSection(){
-    return Container(
-      width: double.infinity,
-      height: 55,
-      color: Colors.grey[800],
-      margin: EdgeInsets.symmetric(horizontal: 5),
-      padding: EdgeInsets.symmetric(horizontal: 10),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: secondaryColor,
-              borderRadius: BorderRadius.circular(20),
-
-            ),
-          ),
-          sizehOR(10),
-          Expanded(child: TextFormField(
-              style: TextStyle(color: primaryColor),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                hintText: "Post your comment",
-                hintStyle: TextStyle(color: secondaryColor)
-              )  ,
-          ))
-        ],
-      ),
+        BlocProvider<GetPostSingleCubit>(
+          create: (context) => di.sl<GetPostSingleCubit>(),
+        ),
+        
+      ],
+      child: CommentMainWidget(appEntity: appEntity),
     );
   }
 }

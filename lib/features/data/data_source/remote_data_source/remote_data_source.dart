@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import '../../../domain/entities/comment/comment_entity.dart';
 import '../../../domain/entities/posts/post_entity.dart';
+import '../../../domain/entities/reply/replay_entity.dart';
 import '../../../domain/entities/user/user_entity.dart';
 
 abstract class FirebaseRemoteDataSource{
@@ -22,5 +24,18 @@ abstract class FirebaseRemoteDataSource{
   Future<void> updatePost(PostEntity post);
   Future<void> deletePost(PostEntity post);
   Future<void> likePost(PostEntity post);
+  Stream<List<PostEntity>> readSinglePost(String postId);
+  //Comment
+  Future<void> createComment(CommentEntity comment);
+  Stream<List<CommentEntity>> readComments(String postId);
+  Future<void> updateComment(CommentEntity comment);
+  Future<void> deleteComment(CommentEntity comment);
+  Future<void> likeComment(CommentEntity comment);
+  //Replay
+  Future<void> createReplay(ReplayEntity replay);
+  Stream<List<ReplayEntity>> readReplays(ReplayEntity replay);
+  Future<void> updateReplay(ReplayEntity replay);
+  Future<void> deleteReplay(ReplayEntity replay);
+  Future<void> likeReplay(ReplayEntity replay);
 
 }

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:ig/const.dart';
+import 'package:ig/features/domain/entities/app_entity.dart';
+import 'package:ig/features/domain/entities/comment/comment_entity.dart';
 import 'package:ig/features/domain/entities/posts/post_entity.dart';
 import 'package:ig/features/domain/entities/user/user_entity.dart';
 import 'package:ig/features/presentation/pages/coment_page.dart';
 import 'package:ig/features/presentation/pages/credential/sign_in_page.dart';
 import 'package:ig/features/presentation/pages/credential/sign_up_page.dart';
+import 'package:ig/features/presentation/pages/edit_comment_page.dart';
 import 'package:ig/features/presentation/pages/edit_profile_page.dart';
 import 'package:ig/features/presentation/pages/update_post_page.dart';
 
@@ -27,13 +30,24 @@ class OnGenerateRoute{
         }
       }
       case PageConst.commentPage: {
-        return routeBuilder(CommentPage());
+        if(args is AppEntity){
+          return routeBuilder(ComentPage(appEntity: args,));
+        }else{
+          return routeBuilder(NoPageFound());
+        }
       }
       case PageConst.signInPage: {
         return routeBuilder(SignInPage());
       }
       case PageConst.signUpPage: {
         return routeBuilder(SignUpPage());
+      }
+      case PageConst.updateCommentPage:{
+        if(args is CommentEntity){
+          return routeBuilder(EditCommentPage(comment: args));
+        }else{
+          return routeBuilder(NoPageFound());
+        }
       }
       default: {  NoPageFound();}
     }

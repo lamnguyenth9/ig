@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:ig/features/data/data_source/remote_data_source/remote_data_source.dart';
+import 'package:ig/features/domain/entities/comment/comment_entity.dart';
 import 'package:ig/features/domain/entities/posts/post_entity.dart';
+import 'package:ig/features/domain/entities/reply/replay_entity.dart';
 import 'package:ig/features/domain/entities/user/user_entity.dart';
 import 'package:ig/features/domain/reposotories/firebase_repository.dart';
 
@@ -52,5 +54,38 @@ class FirebaseRepositoryImpl implements FirebaseRepository{
 
   @override
   Future<void> updatePost(PostEntity post) async=>remoteDataSource.updatePost(post);
+
+  @override
+  Future<void> createComment(CommentEntity comment) async =>remoteDataSource.createComment(comment);
+
+  @override
+  Future<void> deleteComment(CommentEntity comment) async=>remoteDataSource.deleteComment(comment);
+
+  @override
+  Future<void> likeComment(CommentEntity comment) async=>remoteDataSource.likeComment(comment);
+
+  @override
+  Stream<List<CommentEntity>> readComments(String postId) =>remoteDataSource.readComments(postId);
+
+  @override
+  Future<void> updateComment(CommentEntity comment) async=>remoteDataSource.updateComment(comment);
+  
+  @override
+  Stream<List<PostEntity>> readSinglePost(String postId) =>remoteDataSource.readSinglePost(postId);
+
+  @override
+  Future<void> createReplay(ReplayEntity replay) async=>remoteDataSource.createReplay(replay);
+
+  @override
+  Future<void> deleteReplay(ReplayEntity replay)async=>remoteDataSource.deleteReplay(replay); 
+
+  @override
+  Future<void> likeReplay(ReplayEntity replay) async=>remoteDataSource.likeReplay(replay);
+
+  @override
+  Stream<List<ReplayEntity>> readReplays(ReplayEntity replay) =>remoteDataSource.readReplays(replay);
+
+  @override
+  Future<void> updateReplay(ReplayEntity replay) async=>remoteDataSource.updateReplay(replay);
 
 }

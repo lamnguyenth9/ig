@@ -5,9 +5,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:ig/const.dart';
 import 'package:ig/features/data/data_source/remote_data_source/remote_data_source.dart';
+import 'package:ig/features/data/model/comment/comment_model.dart';
 import 'package:ig/features/data/model/post/post_model.dart';
+import 'package:ig/features/data/model/replay/replay_model.dart';
 import 'package:ig/features/data/model/user/user_model.dart';
+import 'package:ig/features/domain/entities/comment/comment_entity.dart';
 import 'package:ig/features/domain/entities/posts/post_entity.dart';
+import 'package:ig/features/domain/entities/reply/replay_entity.dart';
 import 'package:ig/features/domain/entities/user/user_entity.dart';
 import 'package:uuid/uuid.dart';
 
@@ -239,7 +243,7 @@ class RemoteDataSourceImpl implements FirebaseRemoteDataSource{
       }else{
         postCollection.doc(post.postId).update({
           "likes":FieldValue.arrayUnion([currentUid]),
-          "totalLikes":totalLikes-1
+          "totalLikes":totalLikes+1
         });
       }
     }
@@ -259,5 +263,173 @@ class RemoteDataSourceImpl implements FirebaseRemoteDataSource{
     if(post.postImageUrl!=""&&post.postImageUrl!=null) postInfor['postImageUrl']=post.postImageUrl;
     postCollection.doc(post.postId).update(postInfor);
   }
+
+  @override
+  Stream<List<PostEntity>> readSinglePost(String postId) {
+    final postCollection=firebaseFirestore.collection(FirebaseConst.posts).orderBy("createAt",descending: true).where("postId",isEqualTo: postId);
+    return postCollection.snapshots().map((querySnapshot)=>querySnapshot.docs.map((e)=>PostModel.fromSnapshot(e)).toList());
+  }
+
+  @override
+  Future<void> createComment(CommentEntity comment)async {
+    final commentCollection=firebaseFirestore.collection(FirebaseConst.posts).doc(comment.postId).collection(FirebaseConst.comment);
+
+    final newComment= CommentModel(
+      commentId: comment.commentId,
+      createAt: comment.createAt,
+      creatorUid: comment.creatorUid,
+      description: comment.description,
+      likes: [],
+      postId: comment.postId,
+      totalReplays: 0,
+      userProfileUrl: comment.userProfileUrl,
+      username: comment.username
+    ).toJson();
+    try{
+      final commentDocRef=await commentCollection.doc(comment.commentId).get();
+      if(!commentDocRef.exists){
+        commentCollection.doc(comment.commentId).set(newComment).then((value){
+          final postCollection=firebaseFirestore.collection(FirebaseConst.posts).doc(comment.postId);
+          postCollection.get().then((value){
+            if(value.exists){
+              final totalComments=value.get('totalComments');
+              postCollection.update({"totalComments":totalComments+1});
+              return;
+            }
+          });
+        });
+      }else{
+        commentCollection.doc(comment.commentId).update(newComment);
+      }
+    }catch(e){
+      print("some error: $e");
+    }
+  }
+
+  @override
+  Future<void> deleteComment(CommentEntity comment)async {
+    final commentCollection=firebaseFirestore.collection(FirebaseConst.posts).doc(comment.postId).collection(FirebaseConst.comment);
+    try{
+      commentCollection.doc(comment.commentId).delete().then((value){
+        final postCollection=firebaseFirestore.collection(FirebaseConst.posts).doc(comment.postId);
+          postCollection.get().then((value){
+            if(value.exists){
+              final totalComments=value.get('totalComments');
+              postCollection.update({"totalComments":totalComments-1});
+              return;
+            }
+          });
+      });
+    }catch(e){
+       toast("some error: $e",);
+    }
+  }
+
+  @override
+  Future<void> likeComment(CommentEntity comment)async {
+    final commentCollection=firebaseFirestore.collection(FirebaseConst.posts).doc(comment.postId).collection(FirebaseConst.comment);
+    final currentUid=await getCurrentUid();
+    final commentRef=await commentCollection.doc(comment.commentId).get();
+    if(commentRef.exists){
+      List likes=commentRef.get("likes");
+      if(likes.contains(currentUid)){
+        commentCollection.doc(comment.commentId).update({
+          "likes":FieldValue.arrayRemove([currentUid])
+        });
+      }else{
+          commentCollection.doc(comment.commentId).update({
+          "likes":FieldValue.arrayUnion([currentUid])
+        });
+      }
+    }
+  }
+
+  @override
+  Stream<List<CommentEntity>> readComments(String postId) {
+
+    final commentCollection=firebaseFirestore.collection(FirebaseConst.posts).doc(postId).collection(FirebaseConst.comment).orderBy("createAt",descending: true);
+    return commentCollection.snapshots().map((querySnapshot)=>querySnapshot.docs.map((e)=>CommentModel.fromSnapshot(e)).toList());
+  }
+
+  @override
+  Future<void> updateComment(CommentEntity comment)async   {
+    final commentCollection=firebaseFirestore.collection(FirebaseConst.posts).doc(comment.postId).collection(FirebaseConst.comment);
+    Map<String,dynamic> commentInfor=Map();
+    if(comment.description!=""&&comment.description!=null) commentInfor['description']=comment.description;
+    commentInfor['createAt']=FieldValue.serverTimestamp();
+    commentCollection.doc(comment.commentId).update(commentInfor);
+  }
+
+  @override
+  Future<void> createReplay(ReplayEntity replay)async {
+    final replayCollection=firebaseFirestore.collection(FirebaseConst.posts).doc(replay.postId).collection(FirebaseConst.comment).doc(replay.commentId).collection(FirebaseConst.replay);
+    final newReplay=ReplayModel(
+      creatorUid: replay.replayId,
+      commentId: replay.commentId,
+      createAt: replay.createAt,
+      description: replay.description,
+      likes: [],
+      postId: replay.postId,
+      replayId: replay.replayId,
+      username: replay.username,
+      userprofileUrl: replay.userprofileUrl
+    ).toJson();
+    try{
+      final replayDocRef=await replayCollection.doc(replay.replayId).get();
+      if(!replayDocRef.exists){
+        replayCollection.doc(replay.replayId).set(newReplay);
+      }else{
+        replayCollection.doc(replay.replayId).update(newReplay);
+      }
+    }catch(e){
+      print("some error: $e");
+    }
+  }
+
+  @override
+  Future<void> deleteReplay(ReplayEntity replay)async {
+    final replayCollection=firebaseFirestore.collection(FirebaseConst.posts).doc(replay.postId).collection(FirebaseConst.comment).doc(replay.commentId).collection(FirebaseConst.replay);
+    try{
+       replayCollection.doc(replay.replayId).delete();
+    }catch(e){
+      print("some error: $e");
+    }
+  }
+
+  @override
+  Future<void> likeReplay(ReplayEntity replay)async {
+    final replayCollection=firebaseFirestore.collection(FirebaseConst.posts).doc(replay.postId).collection(FirebaseConst.comment).doc(replay.commentId).collection(FirebaseConst.replay);
+    final currentUid=await getCurrentUid();
+    final replaytRef=await replayCollection.doc(replay.replayId).get();
+    if(replaytRef.exists){
+      List likes=replaytRef.get("likes");
+      if(likes.contains(currentUid)){
+        replayCollection.doc(replay.replayId).update({
+          "likes":FieldValue.arrayRemove([currentUid])
+        });
+      }else{
+          replayCollection.doc(replay.replayId).update({
+          "likes":FieldValue.arrayUnion([currentUid])
+        });
+      }
+    }
+  }
+
+  @override
+  Stream<List<ReplayEntity>> readReplays(ReplayEntity replay) {
+    final replayCollection=firebaseFirestore.collection(FirebaseConst.posts).doc(replay.postId).collection(FirebaseConst.comment).doc(replay.commentId).collection(FirebaseConst.replay);
+    return replayCollection.snapshots().map((querySnapshot)=>querySnapshot.docs.map((e)=>ReplayModel.fromSnapshot(e)).toList());
+  }
+
+  @override
+  Future<void> updateReplay(ReplayEntity replay) async{
+    final replayCollection=firebaseFirestore.collection(FirebaseConst.posts).doc(replay.postId).collection(FirebaseConst.comment).doc(replay.commentId).collection(FirebaseConst.replay);
+    Map<String,dynamic> replayInfor=Map();
+    if(replay.description!=""&&replay.description!=null) replayInfor['description']=replay.description;
+    replayInfor['createAt']=FieldValue.serverTimestamp();
+    replayCollection.doc(replay.replayId).update(replayInfor);
+  }
+  
+  
 
 }

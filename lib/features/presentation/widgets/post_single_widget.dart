@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ig/features/domain/entities/app_entity.dart';
 import 'package:ig/features/domain/entities/posts/post_entity.dart';
+import 'package:ig/features/domain/usecases/firebase_usecase/user/get_current_uid_usecase.dart';
 import 'package:ig/features/presentation/cubit/post/cubit/post_cubit.dart';
 import 'package:ig/features/presentation/pages/update_post_page.dart';
+import 'package:ig/features/presentation/widgets/like_animation_widget.dart';
 import 'package:ig/features/presentation/widgets/profile_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:ig/injection_container.dart'as di;
 
 import '../../../const.dart';
 import '../pages/edit_post_page.dart';
@@ -18,6 +22,18 @@ class PostSingleWidget extends StatefulWidget {
 }
 
 class _PostSingleWidgetState extends State<PostSingleWidget> {
+  
+  bool  _isLikeAnimating=false;
+  String _currentUid="";
+  @override
+  void initState() {
+    di.sl<GetCurrentUidUsecase>().call().then((value){
+      setState(() {
+        _currentUid=value;
+      });
+    });
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -60,12 +76,39 @@ class _PostSingleWidgetState extends State<PostSingleWidget> {
               ],
             ),
             sizeVer(10),
-            Container(
-              width: double.infinity,
-              height: MediaQuery.of(context).size.height * 0.3,
-              color: secondaryColor,
-              child: ClipRRect(
-                child: profileWidget(imageUrl: widget.post.postImageUrl ),
+            GestureDetector(
+              onTap: (){
+                _likePost();
+                setState(() {
+                  _isLikeAnimating=true;
+                });
+              },
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                  width: double.infinity,
+                  height: MediaQuery.of(context).size.height * 0.3,
+                  color: secondaryColor,
+                  child: ClipRRect(
+                    child: profileWidget(imageUrl: widget.post.postImageUrl ),
+                  ),
+                ),
+                AnimatedOpacity(
+                  
+                  opacity: _isLikeAnimating?1:0,
+                  duration: Duration(milliseconds: 200),
+                  child: LikeAnimationWidget(
+                    child:  const Icon( Icons.favorite,size: 100,color:Colors.white,), 
+                    duration: Duration(milliseconds: 300), 
+                    isLikeAnimating: _isLikeAnimating,
+                    onLikeFinish: (){
+                      setState(() {
+                        _isLikeAnimating=false;
+                      });
+                    },),
+                )
+                ]
               ),
             ),
             sizeVer(10),
@@ -74,14 +117,13 @@ class _PostSingleWidgetState extends State<PostSingleWidget> {
               children: [
                 Row(
                   children: [
-                    const Icon(
-                      Icons.favorite,
-                      color: primaryColor,
-                    ),
+                    GestureDetector(
+                      onTap: _likePost,
+                      child: Icon(widget.post.likes!.contains(_currentUid)? Icons.favorite:Icons.favorite_outline,color: widget.post.likes!.contains(_currentUid)?Colors.red: Colors.white,)),
                     sizehOR(10),
                      GestureDetector(
                       onTap: (){
-                        Navigator.pushNamed(context, PageConst.commentPage);
+                        Navigator.pushNamed(context, PageConst.commentPage,arguments: AppEntity( uid: _currentUid, postId: widget.post.postId!,));
                       },
                       child: const Icon(Icons.messenger_outline_rounded, color: primaryColor)),
                     sizehOR(10),
@@ -112,10 +154,15 @@ class _PostSingleWidgetState extends State<PostSingleWidget> {
               ],
             ),
             sizeVer(10),
-              Text("${widget.post.totalComments} comments",style: const TextStyle(
-                  color: darkGreyColor,
-                  
-                ),),
+              GestureDetector(
+                onTap: (){
+                  Navigator.pushNamed(context, PageConst.commentPage,arguments: AppEntity( uid: _currentUid, postId: widget.post.postId!,));
+                },
+                child: Text("View all ${widget.post.totalComments} comments",style: const TextStyle(
+                    color: darkGreyColor,
+                    
+                  ),),
+              ),
                 sizeVer(10),
                  Text("${DateFormat("dd/MMM/yyy").format(widget.post.createAt!.toDate())}",style: const TextStyle(
                   color: darkGreyColor,
@@ -213,5 +260,12 @@ class _PostSingleWidgetState extends State<PostSingleWidget> {
   }
   deletePost(){
     BlocProvider.of<PostCubit>(context).deletePost(post: PostEntity(postId: widget.post.postId));
+  }
+  _likePost(){
+    BlocProvider.of<PostCubit>(context).likePost(
+      post: PostEntity(
+        postId: widget.post.postId,
+         
+      ));
   }
 }
