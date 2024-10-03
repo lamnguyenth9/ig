@@ -41,39 +41,45 @@ class _PostSingleWidgetState extends State<PostSingleWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 30,
-                      height: 30,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(30),
-                        child: profileWidget(
-                          imageUrl: widget.post.userProfileUrl
+            GestureDetector(
+              onTap: (){
+                Navigator.pushNamed(context, PageConst.singleUserPage,arguments: widget.post.creatorUid);
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 30,
+                        height: 30,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(30),
+                          child: profileWidget(
+                            imageUrl: widget.post.userProfileUrl
+                          ),
                         ),
                       ),
-                    ),
-                    sizehOR(10),
-                     Text(
-                      "${widget.post.username}",
-                      style: const TextStyle(
-                          color: primaryColor, fontWeight: FontWeight.bold),
-                    )
-                  ],
-                ),
-                 GestureDetector(
-                  onTap: (){
-                    _showBottomModalSheet(context,widget.post);
-                  },
-                   child: const Icon(
-                    Icons.more_vert,
-                    color: primaryColor,
-                                   ),
-                 )
-              ],
+                      sizehOR(10),
+                       Text(
+                        "${widget.post.username}",
+                        style: const TextStyle(
+                            color: primaryColor, fontWeight: FontWeight.bold),
+                      )
+                    ],
+                  ),
+                  widget.post.creatorUid==_currentUid?
+                   GestureDetector(
+                    onTap: (){
+                      _showBottomModalSheet(context,widget.post);
+                    },
+                     child: const Icon(
+                      Icons.more_vert,
+                      color: primaryColor,
+                                     ),
+                   ):Container()
+                ],
+              ),
             ),
             sizeVer(10),
             GestureDetector(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ig/features/presentation/cubit/auth/cubit/auth_cubit.dart';
 import 'package:ig/features/presentation/cubit/credential/cubit/credential_cubit.dart';
+import 'package:ig/features/presentation/cubit/post/cubit/post_cubit.dart';
 import 'package:ig/features/presentation/cubit/post/single_post/cubit/get_post_single_cubit.dart';
 import 'package:ig/features/presentation/cubit/user/cubit/user_cubit.dart';
 import 'package:ig/features/presentation/cubit/user/get_single_user/cubit/get_single_user_cubit.dart';
@@ -32,7 +33,8 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_)=>di.sl<CredentialCubit>()),
         BlocProvider(create: (_)=>di.sl<UserCubit>()),
         BlocProvider(create: (_)=>di.sl<GetSingleUserCubit>()),
-        BlocProvider(create: (_)=>di.sl<GetPostSingleCubit>())
+        BlocProvider(create: (_)=>di.sl<GetPostSingleCubit>()),
+        BlocProvider(create: (_)=>di.sl<PostCubit>())
         
       ],
       child: MaterialApp(

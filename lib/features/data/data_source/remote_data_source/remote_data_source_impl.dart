@@ -207,7 +207,15 @@ class RemoteDataSourceImpl implements FirebaseRemoteDataSource{
       print("2");
       if(!postDocRef.exists){
         print("3");
-        postCollection.doc(post.postId).set(newPost);
+        postCollection.doc(post.postId).set(newPost).then((value){
+          final userCollection=firebaseFirestore.collection(FirebaseConst.users).doc(post.creatorUid);
+          userCollection.get().then((value){
+            if(value.exists){
+              final totalPosts=value.get('totalPosts');
+              userCollection.update({'totalPosts':totalPosts+1});
+            }
+          });
+        });
       }else{
         print("4");
         postCollection.doc(post.postId).update(newPost);
@@ -221,7 +229,15 @@ class RemoteDataSourceImpl implements FirebaseRemoteDataSource{
   Future<void> deletePost(PostEntity post) async{
     final postCollection=firebaseFirestore.collection(FirebaseConst.posts);
     try{
-      postCollection.doc(post.postId).delete();
+      postCollection.doc(post.postId).delete().then((value){
+          final userCollection=firebaseFirestore.collection(FirebaseConst.users).doc(post.creatorUid);
+          userCollection.get().then((value){
+            if(value.exists){
+              final totalPosts=value.get('totalPosts');
+              userCollection.update({'totalPosts':totalPosts-1});
+            }
+          });
+        });
     }catch(e){
        toast("some error: $e",);
     }
@@ -364,7 +380,7 @@ class RemoteDataSourceImpl implements FirebaseRemoteDataSource{
   Future<void> createReplay(ReplayEntity replay)async {
     final replayCollection=firebaseFirestore.collection(FirebaseConst.posts).doc(replay.postId).collection(FirebaseConst.comment).doc(replay.commentId).collection(FirebaseConst.replay);
     final newReplay=ReplayModel(
-      creatorUid: replay.replayId,
+      creatorUid: replay.creatorUid,
       commentId: replay.commentId,
       createAt: replay.createAt,
       description: replay.description,
@@ -377,7 +393,17 @@ class RemoteDataSourceImpl implements FirebaseRemoteDataSource{
     try{
       final replayDocRef=await replayCollection.doc(replay.replayId).get();
       if(!replayDocRef.exists){
-        replayCollection.doc(replay.replayId).set(newReplay);
+        replayCollection.doc(replay.replayId).set(newReplay)
+        .then((value){
+          final commentCollection=firebaseFirestore.collection(FirebaseConst.posts).doc(replay.postId).collection(FirebaseConst.comment).doc(replay.commentId);
+          commentCollection.get().then((value){
+            if(value.exists){
+              final totalReplays=value.get('totalReplays');
+              commentCollection.update({'totalReplays':totalReplays+1});
+              print(totalReplays);
+            }
+          });
+        });
       }else{
         replayCollection.doc(replay.replayId).update(newReplay);
       }
@@ -390,7 +416,15 @@ class RemoteDataSourceImpl implements FirebaseRemoteDataSource{
   Future<void> deleteReplay(ReplayEntity replay)async {
     final replayCollection=firebaseFirestore.collection(FirebaseConst.posts).doc(replay.postId).collection(FirebaseConst.comment).doc(replay.commentId).collection(FirebaseConst.replay);
     try{
-       replayCollection.doc(replay.replayId).delete();
+       replayCollection.doc(replay.replayId).delete().then((value){
+        final  commentCollection=firebaseFirestore.collection(FirebaseConst.posts).doc(replay.postId).collection(FirebaseConst.comment).doc(replay.commentId);
+        commentCollection.get().then((value){
+          if(value.exists){
+            final totalReplays=value.get('totalReplays');
+            commentCollection.update({'totalReplays':totalReplays-1});
+          }
+        });
+       });
     }catch(e){
       print("some error: $e");
     }

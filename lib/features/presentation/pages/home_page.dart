@@ -68,6 +68,7 @@ class _HomePageState extends State<HomePage> {
                   itemCount: state.posts.length,
                   itemBuilder: (context, index) {
                     final post = state.posts[index];
+                    print("hihi+${post.totalComments}");
                     return BlocProvider(
                       create: (context) => di.sl<PostCubit>(),
                       child: PostSingleWidget(post: post),

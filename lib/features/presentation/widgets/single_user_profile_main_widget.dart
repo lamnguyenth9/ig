@@ -2,141 +2,149 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ig/const.dart';
-import 'package:ig/features/domain/entities/posts/post_entity.dart';
 import 'package:ig/features/domain/entities/user/user_entity.dart';
 import 'package:ig/features/presentation/cubit/auth/cubit/auth_cubit.dart';
-import 'package:ig/features/presentation/cubit/post/cubit/post_cubit.dart';
+import 'package:ig/features/presentation/cubit/user/get_single_user/cubit/get_single_user_cubit.dart';
 import 'package:ig/features/presentation/pages/edit_profile_page.dart';
 import 'package:ig/features/presentation/widgets/profile_widget.dart';
 
-class ProfilePage extends StatefulWidget {
-  final UserEntity currentUser;
-  const ProfilePage({super.key, required this.currentUser});
+import '../../domain/entities/posts/post_entity.dart';
+import '../cubit/post/cubit/post_cubit.dart';
+
+class SingleUserProfileMainWidget extends StatefulWidget {
+  final String otherUid;
+  const SingleUserProfileMainWidget({super.key, required this.otherUid});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  State<SingleUserProfileMainWidget> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends State<SingleUserProfileMainWidget> {
   @override
   void initState() {
+    BlocProvider.of<GetSingleUserCubit>(context).getUsers(uid: widget.otherUid);
     BlocProvider.of<PostCubit>(context).getPosts(PostEntity());
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
-        backgroundColor: backgroundColor,
-        title: Text(
-          "${widget.currentUser.username}",
-          style: TextStyle(color: primaryColor),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 10.0),
-            child: InkWell(
-              onTap: () {
-                _openBottomModelSheet(context);
-              },
-              child: const Icon(
-                Icons.menu,
-                color: primaryColor,
-              ),
+    return BlocBuilder<GetSingleUserCubit, GetSingleUserState>(
+      builder: (context, state) {
+        if(state is GetSingleUserLoaded){
+          final singleUser=state.user;
+          return Scaffold(
+          backgroundColor: backgroundColor,
+          appBar: AppBar(
+            backgroundColor: backgroundColor,
+            title: Text(
+              "${singleUser.username}",
+              style: TextStyle(color: primaryColor),
             ),
-          )
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(30),
-                      child: profileWidget(
-                          imageUrl: widget.currentUser.profileUrl),
-                    ),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 10.0),
+                child: InkWell(
+                  onTap: () {
+                    _openBottomModelSheet(context: context,user: singleUser);
+                  },
+                  child: const Icon(
+                    Icons.menu,
+                    color: primaryColor,
                   ),
+                ),
+              )
+            ],
+          ),
+          body: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
+                      Container(
+                        width: 80,
+                        height: 80,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(30),
+                          child: profileWidget(
+                              imageUrl: singleUser.profileUrl),
+                        ),
+                      ),
+                      Row(
                         children: [
-                          Text(
-                            "${widget.currentUser.totalPosts}",
-                            style: const TextStyle(
-                                color: primaryColor,
-                                fontWeight: FontWeight.bold),
+                          Column(
+                            children: [
+                              Text(
+                                "${singleUser.totalPosts}",
+                                style: const TextStyle(
+                                    color: primaryColor,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              sizeVer(10),
+                              const Text(
+                                "Post",
+                                style: TextStyle(color: primaryColor),
+                              )
+                            ],
                           ),
-                          sizeVer(10),
-                          const Text(
-                            "Post",
-                            style: TextStyle(color: primaryColor),
+                          sizehOR(25),
+                          Column(
+                            children: [
+                              Text(
+                                "${singleUser.totalFollowers}",
+                                style: TextStyle(
+                                    color: primaryColor,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              sizeVer(10),
+                              const Text(
+                                "Followers",
+                                style: TextStyle(color: primaryColor),
+                              )
+                            ],
+                          ),
+                          sizehOR(25),
+                          Column(
+                            children: [
+                              Text(
+                                "${singleUser.totalFollowing}",
+                                style: TextStyle(
+                                    color: primaryColor,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              sizeVer(10),
+                              const Text(
+                                "Following",
+                                style: TextStyle(color: primaryColor),
+                              )
+                            ],
                           )
                         ],
                       ),
-                      sizehOR(25),
-                      Column(
-                        children: [
-                          Text(
-                            "${widget.currentUser.totalFollowers}",
-                            style: TextStyle(
-                                color: primaryColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          sizeVer(10),
-                          const Text(
-                            "Followers",
-                            style: TextStyle(color: primaryColor),
-                          )
-                        ],
-                      ),
-                      sizehOR(25),
-                      Column(
-                        children: [
-                          Text(
-                            "${widget.currentUser.totalFollowing}",
-                            style: TextStyle(
-                                color: primaryColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          sizeVer(10),
-                          const Text(
-                            "Following",
-                            style: TextStyle(color: primaryColor),
-                          )
-                        ],
-                      )
                     ],
                   ),
-                ],
-              ),
-              sizeVer(10),
-              Text(
-                "${widget.currentUser.username.toString()}",
-                style: const TextStyle(
-                    color: primaryColor, fontWeight: FontWeight.bold),
-              ),
-              sizeVer(10),
-              const Text(
-                "The bio of the user",
-                style: TextStyle(
-                  color: primaryColor,
-                ),
-              ),
-              sizeVer(10),
-              BlocBuilder<PostCubit, PostState>(
+                  sizeVer(10),
+                  Text(
+                    "${singleUser.username.toString()}",
+                    style: const TextStyle(
+                        color: primaryColor, fontWeight: FontWeight.bold),
+                  ),
+                  sizeVer(10),
+                  const Text(
+                    "The bio of the user",
+                    style: TextStyle(
+                      color: primaryColor,
+                    ),
+                  ),
+                  sizeVer(10),
+                  BlocBuilder<PostCubit, PostState>(
                 builder: (context, state) {
                   if(state is PostLoaded){
-                    final posts=state.posts.where((post)=>post.creatorUid==widget.currentUser.uid).toList();
+                    final posts=state.posts.where((post)=>post.creatorUid==singleUser.uid).toList();
                     return GridView.builder(
                     itemCount: posts.length,
                     shrinkWrap: true,
@@ -158,14 +166,18 @@ class _ProfilePageState extends State<ProfilePage> {
                   return Container();
                 },
               )
-            ],
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+        }
+        return Container();
+      },
     );
   }
 
-  _openBottomModelSheet(BuildContext context) {
+  _openBottomModelSheet({required BuildContext context,required UserEntity user}) {
     return showBottomSheet(
       context: context,
       builder: (context) {
@@ -218,7 +230,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: GestureDetector(
                       onTap: () {
                         Navigator.pushNamed(context, "editProfilePage",
-                            arguments: widget.currentUser);
+                            arguments: user);
                       },
                       child: const Text(
                         "Edit Profile",

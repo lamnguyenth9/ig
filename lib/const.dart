@@ -20,6 +20,9 @@ class PageConst{
   static const String signInPage="signInPage";
   static const String signUpPage="signUpPage";
   static const String updateCommentPage="updateCommentPage";
+  static const String updateReplayPage="updateReplayPage";
+  static const String singlePostPage="singlePostPage";
+  static const String singleUserPage="singleUserPage";
 }
 class FirebaseConst{
   static const String users='users';
